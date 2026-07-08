@@ -1,0 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  --paper: #e9ecf1;
+  --paper-line: #c7cfda;
+  --ink: #17222f;
+  --ink-soft: #47566a;
+  --blue: #2f6fa5;
+  --blue-soft: #dce9f4;
+  --brass: #b9852f;
+  --brass-soft: #f3e5c8;
+  --red: #a8412a;
+  --red-soft: #f4dcd5;
+  --green: #3c6f52;
+  --green-soft: #dcecdf;
+  --cell-bg: #fbfbf9;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+  color: var(--ink);
+  font-family: "Space Grotesk", "Hiragino Sans", sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
