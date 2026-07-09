@@ -7,12 +7,24 @@ interface CellProps {
   isPeer: boolean; // 同じ行・列・箱
   isSameValue: boolean; // 選択中セルと同じ数字
   isWrong: boolean;
+  isHint: boolean; // 「次の一手」として光らせるマスか
+  hintValue?: number; // ヒントを2回押して明かした数字（未確定のプレビュー表示）
   onSelect: (index: number) => void;
 }
 
 const NOTE_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-export function Cell({ index, cell, isSelected, isPeer, isSameValue, isWrong, onSelect }: CellProps) {
+export function Cell({
+  index,
+  cell,
+  isSelected,
+  isPeer,
+  isSameValue,
+  isWrong,
+  isHint,
+  hintValue,
+  onSelect,
+}: CellProps) {
   const row = Math.floor(index / 9);
   const col = index % 9;
 
@@ -22,6 +34,7 @@ export function Cell({ index, cell, isSelected, isPeer, isSameValue, isWrong, on
   else if (isPeer) classNames.push("cell--peer");
   if (cell.isGiven) classNames.push("cell--given");
   if (isWrong) classNames.push("cell--wrong");
+  if (isHint) classNames.push("cell--hint");
   if (col % 3 === 0) classNames.push("cell--box-left");
   if (row % 3 === 0) classNames.push("cell--box-top");
   if (col === 8) classNames.push("cell--edge-right");
@@ -36,6 +49,8 @@ export function Cell({ index, cell, isSelected, isPeer, isSameValue, isWrong, on
     >
       {cell.value !== 0 ? (
         <span className="cell__value">{cell.value}</span>
+      ) : hintValue !== undefined ? (
+        <span className="cell__value cell__value--ghost">{hintValue}</span>
       ) : cell.notes.size > 0 ? (
         <span className="cell__notes">
           {NOTE_ORDER.map((n) => (

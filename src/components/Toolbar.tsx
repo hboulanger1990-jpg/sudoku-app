@@ -5,11 +5,19 @@ interface ToolbarProps {
   elapsedMs: number;
   mistakes: number;
   isPaused: boolean;
+  hasStarted: boolean;
   isNoteMode: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
   onNewGame: (difficulty: Difficulty) => void;
   onTogglePause: () => void;
   onToggleNoteMode: () => void;
   onHint: () => void;
+  onClear: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  onAutoComplete: () => void;
+  onResetPuzzle: () => void;
 }
 
 const DIFFICULTY_LABEL: Record<Difficulty, string> = {
@@ -27,16 +35,49 @@ function formatTime(ms: number): string {
   return `${m}:${s}`;
 }
 
+interface ActionButtonProps {
+  icon: string;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  active?: boolean;
+}
+
+function ActionButton({ icon, label, onClick, disabled, active }: ActionButtonProps) {
+  return (
+    <button
+      type="button"
+      className={`action-btn ${active ? "action-btn--active" : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+    >
+      <span className="action-btn__icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="action-btn__label">{label}</span>
+    </button>
+  );
+}
+
 export function Toolbar({
   difficulty,
   elapsedMs,
   mistakes,
   isPaused,
+  hasStarted,
   isNoteMode,
+  canUndo,
+  canRedo,
   onNewGame,
   onTogglePause,
   onToggleNoteMode,
   onHint,
+  onClear,
+  onUndo,
+  onRedo,
+  onAutoComplete,
+  onResetPuzzle,
 }: ToolbarProps) {
   return (
     <div className="toolbar">
@@ -56,28 +97,35 @@ export function Toolbar({
       <div className="toolbar__row toolbar__row--status">
         <div className="stat">
           <span className="stat__label">TIME</span>
-          <span className="stat__value stat__value--mono">{isPaused ? "‑‑:‑‑" : formatTime(elapsedMs)}</span>
+          <span className="stat__value stat__value--mono">
+            {isPaused || !hasStarted ? "‑‑:‑‑" : formatTime(elapsedMs)}
+          </span>
         </div>
         <div className="stat">
           <span className="stat__label">MISTAKES</span>
           <span className="stat__value stat__value--mono">{mistakes}</span>
         </div>
         <div className="toolbar__actions">
-          <button type="button" className="icon-btn" onClick={onTogglePause} aria-label="pause">
-            {isPaused ? "再開" : "一時停止"}
-          </button>
           <button
             type="button"
-            className={`icon-btn ${isNoteMode ? "icon-btn--active" : ""}`}
-            onClick={onToggleNoteMode}
-            aria-label="note mode"
+            className="icon-btn"
+            onClick={onTogglePause}
+            aria-label="pause"
+            disabled={!hasStarted}
           >
-            メモ
-          </button>
-          <button type="button" className="icon-btn" onClick={onHint} aria-label="hint">
-            ヒント
+            {isPaused ? "再開" : "一時停止"}
           </button>
         </div>
+      </div>
+
+      <div className="action-grid">
+        <ActionButton icon="↶" label="元に戻す" onClick={onUndo} disabled={!canUndo} />
+        <ActionButton icon="↷" label="やり直す" onClick={onRedo} disabled={!canRedo} />
+        <ActionButton icon="⌫" label="消す" onClick={onClear} />
+        <ActionButton icon="✎" label="メモ" onClick={onToggleNoteMode} active={isNoteMode} />
+        <ActionButton icon="💡" label="ヒント" onClick={onHint} />
+        <ActionButton icon="↺" label="最初から" onClick={onResetPuzzle} />
+        <ActionButton icon="⚡" label="自動で仕上げ" onClick={onAutoComplete} />
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ export interface GameState {
   startedAt: number; // epoch ms
   elapsedMs: number; // 一時停止/再開を考慮した積算時間
   isPaused: boolean;
+  hasStarted: boolean; // スタートボタンを押してタイマーが動き出したか
   isComplete: boolean;
   mistakes: number;
 }
