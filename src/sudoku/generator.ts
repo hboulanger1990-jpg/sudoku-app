@@ -1,5 +1,5 @@
 import type { Grid } from "./solver";
-import { cloneGrid, countSolutions, generateSolvedGrid } from "./solver";
+import { cloneGrid, countSolutions, generateSolvedGrid, isHumanSolvable } from "./solver";
 
 export type Difficulty = "easy" | "medium" | "hard";
 
@@ -21,6 +21,9 @@ export interface Puzzle {
  * 難易度に応じた数独の問題を1つ生成する。
  * 1. ランダムな完成盤を作る
  * 2. マスをランダムな順にひとつずつ空け、解が一意でなくなる直前まで削る
+ * 3. Naked Single / Hidden Single だけで最後まで解けるか確認し、
+ *    解けない（＝フォーシングチェーン級の難問になっている）場合は
+ *    直近に空けたマスから順に埋め戻して、無理のない難易度まで調整する
  */
 export function generatePuzzle(difficulty: Difficulty, rng: () => number = Math.random): Puzzle {
   const solution = generateSolvedGrid(rng);
@@ -34,6 +37,9 @@ export function generatePuzzle(difficulty: Difficulty, rng: () => number = Math.
 
   const targetBlanks = TARGET_BLANKS[difficulty];
   let blanks = 0;
+  // 実際に空けたマスを、空けた順番のまま記録しておく
+  // （難易度が高すぎた場合、直近に空けたマスから埋め戻すために使う）
+  const removedIndices: number[] = [];
 
   for (const index of order) {
     if (blanks >= targetBlanks) break;
@@ -45,6 +51,16 @@ export function generatePuzzle(difficulty: Difficulty, rng: () => number = Math.
       continue;
     }
     blanks++;
+    removedIndices.push(index);
+  }
+
+  // 難易度チェック：Naked Single / Hidden Singleだけで最後まで解けるか確認する。
+  // 解けない場合は、直近に空けたマスから順に埋め戻して易しくする。
+  // isHumanSolvableはバックトラッキングをしないので、この調整自体は軽い処理。
+  while (!isHumanSolvable(puzzle) && removedIndices.length > 0) {
+    const restoreIndex = removedIndices.pop()!;
+    puzzle[restoreIndex] = solution[restoreIndex];
+    blanks--;
   }
 
   return {

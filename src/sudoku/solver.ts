@@ -127,3 +127,95 @@ export function solveGrid(grid: Grid): Grid | null {
   }
   return backtrack(g) ? g : null;
 }
+
+// ─────────────────────────────────────────────
+// 難易度判定用: 人間向けロジック（Naked Single / Hidden Single）
+// ─────────────────────────────────────────────
+
+/** 全27ユニット（行9・列9・箱9）を、マスのインデックス配列として持っておく */
+const UNITS: number[][] = buildUnits();
+
+function buildUnits(): number[][] {
+  const units: number[][] = [];
+  for (let r = 0; r < SIZE; r++) {
+    units.push(Array.from({ length: SIZE }, (_, c) => r * SIZE + c));
+  }
+  for (let c = 0; c < SIZE; c++) {
+    units.push(Array.from({ length: SIZE }, (_, r) => r * SIZE + c));
+  }
+  for (let br = 0; br < SIZE; br += BOX) {
+    for (let bc = 0; bc < SIZE; bc += BOX) {
+      const box: number[] = [];
+      for (let rr = br; rr < br + BOX; rr++) {
+        for (let cc = bc; cc < bc + BOX; cc++) {
+          box.push(rr * SIZE + cc);
+        }
+      }
+      units.push(box);
+    }
+  }
+  return units;
+}
+
+function candidatesAt(grid: Grid, i: number): number[] {
+  const candidates: number[] = [];
+  for (let v = 1; v <= 9; v++) {
+    if (isSafe(grid, i, v)) candidates.push(v);
+  }
+  return candidates;
+}
+
+/**
+ * 「Naked Single」（そのマス自身の候補が1つだけ）と
+ * 「Hidden Single」（そのユニット内でその数字が入れる場所がそこしかない）
+ * だけを使って、盤面を最後まで解けるかどうかを判定する。
+ *
+ * バックトラッキング（仮置き・試行錯誤）は一切行わない、確定的な推論のみ。
+ * これで最後まで解けない盤面は、フォーシングチェーンのような上級テクニックが
+ * ないと解けない＝人間にはかなり難しい問題と判断できる。
+ *
+ * 一意解チェック(countSolutions)と違って全探索をしないため、非常に軽い処理。
+ */
+export function isHumanSolvable(grid: Grid): boolean {
+  const g = cloneGrid(grid);
+
+  while (true) {
+    let progressed = false;
+
+    // Naked Single
+    for (let i = 0; i < 81; i++) {
+      if (g[i] !== 0) continue;
+      const candidates = candidatesAt(g, i);
+      if (candidates.length === 0) return false; // 矛盾（本来起こらないはずだが念のため）
+      if (candidates.length === 1) {
+        g[i] = candidates[0];
+        progressed = true;
+      }
+    }
+    if (progressed) continue;
+
+    // Hidden Single
+    for (const unit of UNITS) {
+      for (let v = 1; v <= 9; v++) {
+        let spot = -1;
+        let count = 0;
+        for (const i of unit) {
+          if (g[i] === 0 && isSafe(g, i, v)) {
+            count++;
+            spot = i;
+            if (count > 1) break;
+          }
+        }
+        if (count === 1) {
+          g[spot] = v;
+          progressed = true;
+        }
+      }
+    }
+    if (progressed) continue;
+
+    break; // これ以上、確定的には進められない
+  }
+
+  return g.every((v) => v !== 0);
+}
